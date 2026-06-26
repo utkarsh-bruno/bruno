@@ -987,15 +987,29 @@ export const renameWorkspaceAction = (workspaceUid, newName) => {
 export const closeWorkspaceAction = (workspaceUid) => {
   return async (dispatch, getState) => {
     try {
-      const { workspaces } = getState().workspaces;
+      const { workspaces, activeWorkspaceUid } = getState().workspaces;
       const workspace = workspaces.find((w) => w.uid === workspaceUid);
 
       if (!workspace) {
         throw new Error('Workspace not found');
       }
 
+      const wasActive = activeWorkspaceUid === workspaceUid;
+
       await ipcRenderer.invoke('renderer:close-workspace', workspace.pathname);
+
+      if (workspace.scratchCollectionUid) {
+        dispatch(removeCollection({ collectionUid: workspace.scratchCollectionUid }));
+      }
+
       dispatch(removeWorkspace(workspaceUid));
+
+      if (wasActive) {
+        const defaultWorkspace = getState().workspaces.workspaces.find((w) => w.type === 'default');
+        if (defaultWorkspace) {
+          await dispatch(switchWorkspace(defaultWorkspace.uid));
+        }
+      }
     } catch (error) {
       toast.error(error.message || 'Failed to close workspace');
       throw error;
