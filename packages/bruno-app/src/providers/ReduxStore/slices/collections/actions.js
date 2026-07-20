@@ -66,12 +66,11 @@ import {
   _clearScriptCollectionBaselines,
   addTransientDirectory,
   addSaveTransientRequestModal,
-  updatePathParam,
-  migrateCollectionToYmlInPlace
+  updatePathParam
 } from './index';
 
 import { each } from 'lodash';
-import { closeAllCollectionTabs, closeTabs as _closeTabs, focusTab, restoreTabs, reopenLastClosedTab, migrateCollectionTabsToYml } from 'providers/ReduxStore/slices/tabs';
+import { closeAllCollectionTabs, closeTabs as _closeTabs, focusTab, restoreTabs, reopenLastClosedTab } from 'providers/ReduxStore/slices/tabs';
 import { clearOpenApiSyncTabState } from 'providers/ReduxStore/slices/openapi-sync';
 import { removeCollectionFromWorkspace } from 'providers/ReduxStore/slices/workspaces';
 import { resolveRequestFilename } from 'utils/common/platform';
@@ -3544,38 +3543,4 @@ export const closeTabs = ({ tabUids }) => async (dispatch, getState) => {
 export const reopenClosedTab = ({ collectionUid } = {}) => async (dispatch) => {
   dispatch(reopenLastClosedTab({ collectionUid }));
   await dispatch(ensureActiveTabInCurrentWorkspace());
-};
-
-export const migrateCollectionToYml = (collectionUid) => (dispatch, getState) => {
-  const { ipcRenderer } = window;
-
-  return new Promise((resolve, reject) => {
-    const state = getState();
-    const collection = findCollectionByUid(state.collections.collections, collectionUid);
-    if (!collection) {
-      return reject(new Error('Collection not found'));
-    }
-
-    const collectionPathname = collection.pathname;
-    ipcRenderer
-      .invoke('renderer:migrate-collection-to-yml', collectionPathname, collectionUid)
-      .then((updatedBrunoConfig) => {
-        dispatch(migrateCollectionToYmlInPlace({ collectionUid, brunoConfig: updatedBrunoConfig }));
-        dispatch(migrateCollectionTabsToYml({ collectionUid }));
-
-        dispatch(addTab({
-          uid: collectionUid,
-          collectionUid: collectionUid,
-          type: 'collection-settings'
-        }));
-        dispatch(updateSettingsSelectedTab({ collectionUid: collectionUid, tab: 'overview' }));
-
-        toast.success('Collection migrated to YML format successfully');
-        resolve();
-      })
-      .catch((err) => {
-        toast.error(`Migration failed: ${err.message || 'Unknown error'}`);
-        reject(err);
-      });
-  });
 };

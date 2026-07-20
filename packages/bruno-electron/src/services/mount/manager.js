@@ -107,7 +107,7 @@ class MountManager {
 
     if (brunoConfig) entry.brunoConfig = brunoConfig;
 
-    // the caller tore the watcher down (e.g. yml migration rewrote every file);
+    // the caller tore the watcher down (e.g. mass file rewrite);
     // clear it before re-reconciling the cache against disk and re-attaching
     const collectionWatcher = require('../../app/collection-watcher');
     collectionWatcher.removeWatcher(entry.collectionPath, entry.win, collectionUid);
