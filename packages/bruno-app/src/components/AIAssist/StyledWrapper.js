@@ -107,7 +107,7 @@ export const PopupWrapper = styled.div`
     background: ${(props) => props.theme.input.bg};
     color: ${(props) => props.theme.text};
     resize: vertical;
-    min-height: calc(4 * 1.4em + 18px);
+    min-height: calc(4 * 1.4em + 10px);
     outline: none;
     transition: border-color 0.15s ease;
 
@@ -203,11 +203,11 @@ export const PopupWrapper = styled.div`
     gap: 6px;
     padding: 5px 12px;
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 400;
     border-radius: ${(props) => props.theme.border.radius.sm};
-    border: 1px solid ${(props) => props.theme.colors.accent};
-    background: ${(props) => props.theme.colors.accent};
-    color: white;
+    border: 1px solid ${(props) => props.theme.button2.color.primary.border};
+    background: ${(props) => props.theme.button2.color.primary.bg};
+    color: ${(props) => props.theme.button2.color.primary.text};
     cursor: pointer;
     transition: opacity 0.15s ease;
 
