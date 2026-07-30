@@ -402,40 +402,10 @@ const loadWorkspaceCollectionsForSwitch = async (dispatch, workspace) => {
       }
 
       if (unopened.length > 0) {
-        if (unopened.length === 1) {
-          toast.error(`Collection is missing or failed to open: ${unopened[0]}`);
-        } else {
-          const scratchUid = updatedWorkspace.scratchCollectionUid;
-          // Keep default toast duration so Playwright (500ms) is not blocked by a long overlay.
-          toast.error((t) => (
-            <span>
-              Some collections are missing or failed to open.{' '}
-              {scratchUid ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    dispatch(addTab({
-                      uid: `${scratchUid}-overview`,
-                      collectionUid: scratchUid,
-                      type: 'workspaceOverview'
-                    }));
-                    toast.dismiss(t.id);
-                  }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: 0,
-                    color: 'inherit',
-                    textDecoration: 'underline',
-                    cursor: 'pointer'
-                  }}
-                >
-                  View in Workspace Overview
-                </button>
-              ) : null}
-            </span>
-          ));
-        }
+        const message = unopened.length === 1
+          ? `Collection is missing or failed to open: ${unopened[0]}`
+          : 'Some collections are missing or failed to open';
+        toast.error(message);
       }
     }
 

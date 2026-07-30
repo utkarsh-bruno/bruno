@@ -6,8 +6,7 @@ jest.mock('@usebruno/schema', () => ({
 
 jest.mock('react-hot-toast', () => ({
   success: jest.fn(),
-  error: jest.fn(),
-  dismiss: jest.fn()
+  error: jest.fn()
 }));
 
 jest.mock('../collections/actions', () => ({
@@ -20,7 +19,6 @@ jest.mock('../collections/actions', () => ({
 
 import os from 'os';
 import path from 'path';
-import { render, screen, fireEvent } from '@testing-library/react';
 import toast from 'react-hot-toast';
 import { configureStore } from '@reduxjs/toolkit';
 import workspacesReducer, { updateWorkspace } from './index';
@@ -122,7 +120,6 @@ describe('switchWorkspace', () => {
 
   beforeEach(() => {
     toast.error.mockClear();
-    toast.dismiss.mockClear();
     window.ipcRenderer.invoke = jest.fn(mockIpcInvoke);
   });
 
@@ -154,7 +151,7 @@ describe('switchWorkspace', () => {
     expect(toast.error).toHaveBeenCalledWith(`Collection is missing or failed to open: ${FAILED_A}`);
   });
 
-  it('toasts Some with a Workspace Overview link when multiple collections fail', async () => {
+  it('toasts when multiple collections are missing or failed to open', async () => {
     const store = createStore();
     store.dispatch(updateWorkspace({ uid: WS_B, pathname: WS_B_PATH }));
     window.ipcRenderer.invoke = jest.fn((channel) => {
@@ -169,16 +166,7 @@ describe('switchWorkspace', () => {
 
     await store.dispatch(switchWorkspace(WS_B));
 
-    expect(toast.error).toHaveBeenCalledTimes(1);
-    const renderToast = toast.error.mock.calls[0][0];
-    expect(typeof renderToast).toBe('function');
-
-    render(renderToast({ id: 'toast-1' }));
-    expect(screen.getByText(/Some collections are missing or failed to open/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'View in Workspace Overview' }));
-
-    expect(toast.dismiss).toHaveBeenCalledWith('toast-1');
-    expect(store.getState().tabs.activeTabUid).toBe(`${SCRATCH_B}-overview`);
+    expect(toast.error).toHaveBeenCalledWith('Some collections are missing or failed to open');
   });
 });
 
