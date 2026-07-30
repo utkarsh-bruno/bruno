@@ -28,7 +28,7 @@ const WorkspaceOverview = ({ workspace }) => {
   const [gitRepositoryUrl, setGitRepositoryUrl] = useState(null);
   const { postmanPackagePrompt, clearPostmanPackagePrompt, handleImportResolved } = usePostmanPackagePrompt();
 
-  const workspaceCollectionsCount = workspace?.collections?.length || 0;
+  const workspaceCollectionsCount = workspace?.collections?.filter((c) => !c.failedToOpen).length || 0;
 
   const workspaceEnvironmentsCount = globalEnvironments?.length || 0;
 

@@ -61,6 +61,13 @@ test.describe('Collections that fail to open', () => {
       await expect(overview.failedBadge(HEALTHY_COLL)).toHaveCount(0);
     });
 
+    await test.step('Overview collection count excludes failed-to-open entries', async () => {
+      // Healthy + Ghost (Not cloned); Missing and Empty are failedToOpen
+      await expect(
+        page.locator('.stat-item').filter({ hasText: 'Collections' }).locator('.stat-value')
+      ).toHaveText('2', { timeout: 10000 });
+    });
+
     await closeElectronApp(app);
   });
 
@@ -74,8 +81,8 @@ test.describe('Collections that fail to open', () => {
       await overview.card(MISSING_COLL).click();
     });
 
-    await test.step('An error toast reports the collection could not be opened', async () => {
-      await expect(page.getByText(/Collection could not be opened:.*missing-coll/)).toBeVisible();
+    await test.step('An error toast reports the collection is missing or failed to open', async () => {
+      await expect(page.getByText(/Collection is missing or failed to open:.*missing-coll/)).toBeVisible();
     });
 
     await test.step('No collection tab is opened and the card stays on the overview', async () => {
@@ -96,8 +103,8 @@ test.describe('Collections that fail to open', () => {
       await overview.card(EMPTY_COLL).click();
     });
 
-    await test.step('An error toast reports the collection could not be opened', async () => {
-      await expect(page.getByText(/Collection could not be opened:.*empty-coll/)).toBeVisible();
+    await test.step('An error toast reports the collection is missing or failed to open', async () => {
+      await expect(page.getByText(/Collection is missing or failed to open:.*empty-coll/)).toBeVisible();
       await expect(tabs.requestTab(EMPTY_COLL)).toHaveCount(0);
     });
 
@@ -154,9 +161,12 @@ test.describe('Collections that fail to open', () => {
     const app = await launchElectronApp({ initUserDataPath, templateVars: { workspacePath } });
     const page = await waitForReadyPage(app);
 
-    await test.step('The switch reports how many collections could not be opened', async () => {
-      await switchWorkspace(page, WORKSPACE_NAME);
-      await expect(page.getByText('2 collections could not be opened')).toBeVisible({ timeout: 10000 });
+    await test.step('The switch reports that some collections are missing or failed to open', async () => {
+      // Race the assertion with the switch; Playwright toast duration is only 500ms.
+      await Promise.all([
+        expect(page.getByText(/Some collections are missing or failed to open/)).toBeVisible({ timeout: 10000 }),
+        switchWorkspace(page, WORKSPACE_NAME)
+      ]);
     });
 
     await closeElectronApp(app);

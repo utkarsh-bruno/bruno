@@ -19,6 +19,7 @@ jest.mock('../collections/actions', () => ({
 
 import os from 'os';
 import path from 'path';
+import toast from 'react-hot-toast';
 import { configureStore } from '@reduxjs/toolkit';
 import workspacesReducer, { updateWorkspace } from './index';
 import collectionsReducer from '../collections';
@@ -108,9 +109,18 @@ const createStore = ({ activeWorkspaceUid = WS_A } = {}) => {
 describe('switchWorkspace', () => {
   let switchWorkspace;
 
+  const WS_B_PATH = path.join(os.tmpdir(), 'ws-b');
+  const FAILED_A = path.join(os.tmpdir(), 'failed-a');
+  const FAILED_B = path.join(os.tmpdir(), 'failed-b');
+
   beforeAll(async () => {
     window.ipcRenderer = { invoke: jest.fn(mockIpcInvoke) };
     ({ switchWorkspace } = await import('./actions'));
+  });
+
+  beforeEach(() => {
+    toast.error.mockClear();
+    window.ipcRenderer.invoke = jest.fn(mockIpcInvoke);
   });
 
   it('closes the AI sidebar when switching workspaces', async () => {
@@ -122,6 +132,41 @@ describe('switchWorkspace', () => {
 
     expect(store.getState().chat.isOpen).toBe(false);
     expect(store.getState().workspaces.activeWorkspaceUid).toBe(WS_B);
+  });
+
+  it('toasts when a single collection is missing or failed to open', async () => {
+    const store = createStore();
+    store.dispatch(updateWorkspace({ uid: WS_B, pathname: WS_B_PATH }));
+    window.ipcRenderer.invoke = jest.fn((channel) => {
+      if (channel === 'renderer:load-workspace-collections') {
+        return Promise.resolve([
+          { name: 'Failed', path: FAILED_A, failedToOpen: true, failureReason: 'not-found' }
+        ]);
+      }
+      return mockIpcInvoke(channel);
+    });
+
+    await store.dispatch(switchWorkspace(WS_B));
+
+    expect(toast.error).toHaveBeenCalledWith(`Collection is missing or failed to open: ${FAILED_A}`);
+  });
+
+  it('toasts when multiple collections are missing or failed to open', async () => {
+    const store = createStore();
+    store.dispatch(updateWorkspace({ uid: WS_B, pathname: WS_B_PATH }));
+    window.ipcRenderer.invoke = jest.fn((channel) => {
+      if (channel === 'renderer:load-workspace-collections') {
+        return Promise.resolve([
+          { name: 'Failed A', path: FAILED_A, failedToOpen: true, failureReason: 'not-found' },
+          { name: 'Failed B', path: FAILED_B, failedToOpen: true, failureReason: 'invalid' }
+        ]);
+      }
+      return mockIpcInvoke(channel);
+    });
+
+    await store.dispatch(switchWorkspace(WS_B));
+
+    expect(toast.error).toHaveBeenCalledWith('Some collections are missing or failed to open');
   });
 });
 

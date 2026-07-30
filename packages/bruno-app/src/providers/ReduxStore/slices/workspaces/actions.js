@@ -403,8 +403,8 @@ const loadWorkspaceCollectionsForSwitch = async (dispatch, workspace) => {
 
       if (unopened.length > 0) {
         const message = unopened.length === 1
-          ? `Collection could not be opened: ${unopened[0]}`
-          : `${unopened.length} collections could not be opened`;
+          ? `Collection is missing or failed to open: ${unopened[0]}`
+          : 'Some collections are missing or failed to open';
         toast.error(message);
       }
     }
