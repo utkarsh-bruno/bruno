@@ -102,7 +102,7 @@ const CollectionsList = ({ workspace }) => {
     }
 
     if (collection.failedToOpen) {
-      toast.error(`Collection could not be opened: ${collection.pathname}`);
+      toast.error(`Collection is missing or failed to open: ${collection.pathname}`);
       return;
     }
 
